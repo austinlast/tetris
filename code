@@ -1,0 +1,136 @@
+import pygame
+import random
+
+pygame.init()
+pygame.font.init()
+
+width = 10
+height = 20
+cell_size = 30
+grid_width = width * cell_size
+grid_height = height * cell_size
+
+side_width = 150
+window_width = grid_width + side_width
+window_height = grid_height
+
+white = (255, 255, 255)
+black = (0, 0, 0)
+gray = (100, 100, 100)
+blue = (173, 216, 230)
+
+grid = [[0 for _ in range(width)] for _ in range(height)]
+
+# all tetrimono pieces
+shapes = [
+    [[1, 1, 1, 1]],
+    [[2, 2], [2, 2]],
+    [[0, 3, 0], [3, 3, 3]],
+    [[0, 4, 4], [4, 4, 0]],
+    [[5, 5, 0], [0, 5, 5]],
+    [[6, 0, 0], [6, 6, 6]],
+    [[0, 0, 7], [7, 7, 7]]
+]
+
+colors = [(0, 0, 0), (0, 255, 255), (255, 255, 0), (128, 0, 128), (0, 255, 0), (255, 0, 0), (0, 0, 255), (255, 165, 0)]
+
+
+class Piece:
+    def __init__(self):
+        self.shape = random.choice(shapes)
+        self.color = max(max(row) for row in self.shape)
+        self.x = width // 2 - len(self.shape[0]) // 2
+        self.y = 0
+
+    def move(self, dir_x, dir_y):
+        if not self.is_valid(dir_x, dir_y):
+            self.x += dir_x
+            self.y += dir_y
+        elif dir_y == 1:
+            self.stop()
+
+    def stop(self):
+        for i, row in enumerate(self.shape):
+            for j, cell in enumerate(row):
+                if cell:
+                    grid[self.y + i][self.x + j] = self.color
+        new_piece()
+
+    def is_valid(self, dir_x, dir_y):
+        for i, row in enumerate(self.shape):
+            for j, cell in enumerate(row):
+                if cell:
+                    new_x = self.x + j + dir_x
+                    new_y = self.y + i + dir_y
+                    if new_x < 0 or new_x >= width or new_y >= height:
+                        return True
+                    if new_y >= 0 and grid[new_y][new_x] != 0:
+                        return True
+        return False
+
+
+
+def new_piece():
+    global current_piece
+    current_piece = Piece()
+
+
+def draw_grid():
+    for y in range(height):
+        for x in range(width):
+            pygame.draw.rect(screen, colors[grid[y][x]],
+                             (x * cell_size, y * cell_size, cell_size, cell_size))
+            pygame.draw.rect(screen, gray,
+                             (x * cell_size, y * cell_size, cell_size, cell_size), 1)
+
+
+def draw_piece():
+    for i, row in enumerate(current_piece.shape):
+        for j, cell in enumerate(row):
+            if cell:
+                pygame.draw.rect(screen, colors[current_piece.color],
+                                 ((current_piece.x + j) * cell_size,
+                                  (current_piece.y + i) * cell_size,
+                                  cell_size, cell_size))
+                pygame.draw.rect(screen, gray,
+                                 ((current_piece.x + j) * cell_size,
+                                  (current_piece.y + i) * cell_size,
+                                  cell_size, cell_size), 1)
+
+# starts ui
+screen = pygame.display.set_mode((window_width, window_height))
+
+current_piece = Piece()
+
+def side_panel():
+    score = 0
+    pygame.draw.rect(screen, blue, (grid_width, 0, side_width, window_height))  # Background
+    font = pygame.font.SysFont('Times New Roman', 30)
+    title_text = font.render('Tetris', False, black)
+    screen.blit(title_text, (grid_width + 20, 20))
+
+    score_text = font.render(f'Score: {score}', False, black)
+    screen.blit(score_text, (grid_width + 20, 100))
+
+
+running = True
+while running:
+    screen.fill(black)
+    draw_grid()
+    draw_piece()
+    side_panel()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                current_piece.move(-1, 0)
+            elif event.key == pygame.K_RIGHT:
+                current_piece.move(1, 0)
+            elif event.key == pygame.K_DOWN:
+                current_piece.move(0, 1)
+
+    pygame.display.flip()
+
+pygame.quit()

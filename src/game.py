@@ -11,6 +11,8 @@ class Game:
         self.next_pieces = [Piece(), Piece(), Piece()] # Shows the next 3 pieces
         self.hold_piece = None
         self.hold_used = False
+        self.score = 0          
+        self.level = 1 
 
     def new_piece(self):
         self.current_piece = self.next_pieces.pop(0)
@@ -29,6 +31,22 @@ class Game:
             self.current_piece.x = WIDTH // 2 - len(self.current_piece.shape[0]) // 2
             self.current_piece.y = 0
         self.hold_used = True
+
+    def clear_lines(self):
+        lines_cleared = 0
+        new_grid = []
+        for row in grid:
+            if 0 not in row:
+                lines_cleared += 1
+            else:
+                new_grid.append(row)
+        for _ in range(lines_cleared):
+            new_grid.insert(0, [0 for _ in range(WIDTH)])
+        for i in range(HEIGHT):
+            grid[i] = new_grid[i]
+        if lines_cleared > 0:
+            scoring = {1: 20, 2: 50, 3: 150, 4: 600}
+            self.score += scoring.get(lines_cleared, 0) * self.level
 
     def draw_grid(self):
         for y in range(HEIGHT):
@@ -65,15 +83,15 @@ class Game:
                     pygame.draw.rect(self.screen, ghost_color, rect, 1)
 
     def side_panel(self):
-        score = 0
         pygame.draw.rect(self.screen, BLUE, (GRID_WIDTH, 0, SIDE_WIDTH, WINDOW_HEIGHT))
         font = pygame.font.SysFont('Times New Roman', 30)
         title_text = font.render('Tetris', False, BLACK)
         self.screen.blit(title_text, (GRID_WIDTH + 20, 20))
-        score_text = font.render(f'Score: {score}', False, BLACK)
-        self.screen.blit(score_text, (GRID_WIDTH + 20, 100))
+        score_text = font.render(f'Score: {self.score}', False, BLACK)
+        self.screen.blit(score_text, (GRID_WIDTH + 20, 60))
+        level_text = font.render(f'Level: {self.level}', False, BLACK)
+        self.screen.blit(level_text, (GRID_WIDTH + 20, 100))
         preview_font = pygame.font.SysFont('Times New Roman', 20)
-
         hold_text = preview_font.render('Hold:', False, BLACK)
         self.screen.blit(hold_text, (GRID_WIDTH + 20, 150))
         if self.hold_piece is not None:
@@ -85,7 +103,6 @@ class Game:
                                            CELL_SIZE // 2, CELL_SIZE // 2)
                         pygame.draw.rect(self.screen, COLORS[self.hold_piece.color], rect)
                         pygame.draw.rect(self.screen, GRAY, rect, 1)
-
         next_text = preview_font.render('Next:', False, BLACK)
         self.screen.blit(next_text, (GRID_WIDTH + 20, 250))
         for index, piece in enumerate(self.next_pieces):
@@ -105,5 +122,6 @@ class Game:
         self.draw_piece()
         self.side_panel()
 
-        if self.current_piece.locked:
+        if self.current_piece.locked:   
+            self.clear_lines()
             self.new_piece()

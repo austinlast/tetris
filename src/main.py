@@ -1,5 +1,5 @@
 import pygame
-import game #Import the entire module to get live reference to current_piece
+import game 
 from settings import BLACK
 
 FALL_EVENT = pygame.USEREVENT + 1
@@ -21,7 +21,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-                
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     game.current_piece.move(-1, 0)
@@ -29,6 +29,10 @@ def main():
                     game.current_piece.move(1, 0)
                 elif event.key == pygame.K_DOWN:
                     game.current_piece.move(0, 1)
+                elif event.key == pygame.K_UP:
+                    game.current_piece.rotate()
+                elif event.key == pygame.K_SPACE:
+                    game.current_piece.instant_drop()
 
             elif event.type == FALL_EVENT:
                 game.current_piece.move(0, 1)

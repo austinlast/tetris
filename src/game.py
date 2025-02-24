@@ -13,11 +13,14 @@ class Game:
         self.hold_used = False
         self.score = 0          
         self.level = 1 
+        self.game_over = False 
 
     def new_piece(self):
         self.current_piece = self.next_pieces.pop(0)
         self.next_pieces.append(Piece())
         self.hold_used = False
+        if self.current_piece.is_valid(0, 0):
+            self.game_over = True
 
     def hold_current_piece(self):
         if self.hold_used:
@@ -45,7 +48,7 @@ class Game:
         for i in range(HEIGHT):
             grid[i] = new_grid[i]
         if lines_cleared > 0:
-            scoring = {1: 20, 2: 50, 3: 150, 4: 600}
+            scoring = {1: 40, 2: 100, 3: 300, 4: 1200}
             self.score += scoring.get(lines_cleared, 0) * self.level
 
     def draw_grid(self):
@@ -114,6 +117,13 @@ class Game:
                                            CELL_SIZE // 2, CELL_SIZE // 2)
                         pygame.draw.rect(self.screen, COLORS[piece.color], rect)
                         pygame.draw.rect(self.screen, GRAY, rect, 1)
+
+    def display_game_over(self):
+        # Added: Draw the Game Over message centered on the screen
+        font = pygame.font.SysFont('Times New Roman', 40)
+        text = font.render("Game Over - Press R to restart", True, BLACK)
+        text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+        self.screen.blit(text, text_rect)
 
     def update(self):
         self.screen.fill(BLACK)

@@ -1,5 +1,5 @@
 import pygame
-from game import screen, new_piece, draw_grid, draw_piece, side_panel, current_piece
+import game #Import the entire module to get live reference to current_piece
 from settings import BLACK
 
 FALL_EVENT = pygame.USEREVENT + 1
@@ -13,23 +13,25 @@ def main():
     pygame.key.set_repeat(200, 50)
 
     while running:
-        screen.fill(BLACK)
-        draw_grid()
-        draw_piece()
-        side_panel()
+        game.screen.fill(BLACK)
+        game.draw_grid()
+        game.draw_piece()
+        game.side_panel()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    current_piece.move(-1, 0)
+                    game.current_piece.move(-1, 0)
                 elif event.key == pygame.K_RIGHT:
-                    current_piece.move(1, 0)
+                    game.current_piece.move(1, 0)
                 elif event.key == pygame.K_DOWN:
-                    current_piece.move(0, 1)
+                    game.current_piece.move(0, 1)
+
             elif event.type == FALL_EVENT:
-                current_piece.move(0, 1)
+                game.current_piece.move(0, 1)
 
         pygame.display.flip()
         clock.tick(60)  

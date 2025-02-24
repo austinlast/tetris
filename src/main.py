@@ -19,14 +19,16 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == FALL_EVENT and not game_instance.game_over:
+            elif event.type == FALL_EVENT and not game_instance.game_over and not game_instance.paused:
                 game_instance.current_piece.move(0, 1)
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     for i in range(HEIGHT):
                         grid[i] = [0] * WIDTH
                     game_instance = Game()
-                else:
+                elif event.key == pygame.K_p:
+                    game_instance.paused = not game_instance.paused  
+                elif not game_instance.game_over and not game_instance.paused:
                     if event.key == pygame.K_LEFT:
                         game_instance.current_piece.move(-1, 0)
                     elif event.key == pygame.K_RIGHT:
@@ -38,7 +40,7 @@ def main():
                     elif event.key == pygame.K_x:
                         game_instance.current_piece.rotate_ccw()
                     elif event.key == pygame.K_SPACE:
-                        game_instance.current_piece.hard_drop()
+                        game_instance.current_piece.instant_drop()
                     elif event.key == pygame.K_c:
                         game_instance.hold_current_piece()
         pygame.display.flip()

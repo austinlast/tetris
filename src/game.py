@@ -15,6 +15,7 @@ class Game:
         self.level = 1 
         self.game_over = False 
         self.lines_cleared = 0 
+        self.paused = False
 
     def new_piece(self):
         self.current_piece = self.next_pieces.pop(0)
@@ -146,6 +147,19 @@ class Game:
                         pygame.draw.rect(self.screen, COLORS[piece.color], rect)
                         pygame.draw.rect(self.screen, GRAY, rect, 1)
 
+    def display_pause(self):
+        font = pygame.font.SysFont('Times New Roman', 30)
+        text = font.render("Paused - Press P to resume", True, BLACK)
+        text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+        padding = 10
+        bg_rect = pygame.Rect(text_rect.left - padding,
+                              text_rect.top - padding,
+                              text_rect.width + 2 * padding,
+                              text_rect.height + 2 * padding)
+        pygame.draw.rect(self.screen, (200, 200, 200), bg_rect)  
+        pygame.draw.rect(self.screen, BLACK, bg_rect, 2) 
+        self.screen.blit(text, text_rect)
+
     def display_game_over(self):
         font = pygame.font.SysFont('Times New Roman', 30)
         text = font.render("Game Over - Press R to restart", True, BLACK)
@@ -166,7 +180,9 @@ class Game:
         self.draw_piece()
         self.side_panel()
 
-        if self.game_over:
+        if self.paused:
+            self.display_pause()
+        elif self.game_over:
             self.display_game_over()
         elif self.current_piece.locked:
             self.clear_lines()

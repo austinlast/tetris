@@ -22,11 +22,10 @@ def main():
             elif event.type == FALL_EVENT and not game_instance.game_over:
                 game_instance.current_piece.move(0, 1)
             elif event.type == pygame.KEYDOWN:
-                if game_instance.game_over:
-                    if event.key == pygame.K_r:
-                        for i in range(HEIGHT):
-                            grid[i] = [0] * WIDTH
-                        game_instance = Game()
+                if event.key == pygame.K_r:
+                    for i in range(HEIGHT):
+                        grid[i] = [0] * WIDTH
+                    game_instance = Game()
                 else:
                     if event.key == pygame.K_LEFT:
                         game_instance.current_piece.move(-1, 0)

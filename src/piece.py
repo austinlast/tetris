@@ -7,6 +7,7 @@ class Piece:
         self.color = max(max(row) for row in self.shape)
         self.x = WIDTH // 2 - len(self.shape[0]) // 2
         self.y = 0
+        self.locked = False
 
     def move(self, dir_x, dir_y):
         if not self.is_valid(dir_x, dir_y):
@@ -20,9 +21,7 @@ class Piece:
             for j, cell in enumerate(row):
                 if cell:
                     grid[self.y + i][self.x + j] = self.color
-        # Import locally to avoid circular dependency
-        from game import new_piece  
-        new_piece()
+        self.locked = True
 
     def is_valid(self, dir_x, dir_y):
         for i, row in enumerate(self.shape):
@@ -50,6 +49,24 @@ class Piece:
                         return
                     if new_y >= 0 and grid[new_y][new_x] != 0:
                         self.shape = prev_shape 
+                        return
+    
+    def rotate_ccw(self):
+        old_shape = self.shape  
+        self.shape = [list(row) for row in zip(*self.shape)][::-1]
+        for i, row in enumerate(self.shape):
+            for j, cell in enumerate(row):
+                if cell:
+                    new_x = self.x + j
+                    new_y = self.y + i
+                    # Check for out-of-bounds or collision
+                    if new_x < 0 or new_x >= WIDTH or new_y >= HEIGHT:
+                        self.shape = old_shape  
+                        return
+                    if new_y >= 0 and grid[new_y][new_x] != 0:
+                        self.shape = old_shape  
+                        return
+
 
     def instant_drop(self):
         while not self.is_valid(0, 1):

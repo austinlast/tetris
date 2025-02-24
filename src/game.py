@@ -1,11 +1,12 @@
 import pygame
+import copy
 from settings import (WIDTH, HEIGHT, CELL_SIZE, GRID_WIDTH, GRID_HEIGHT, 
                       SIDE_WIDTH, WINDOW_WIDTH, WINDOW_HEIGHT, BLACK, GRAY, BLUE, grid, COLORS)
 from piece import Piece
 
 # starts ui
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-# pygame.display.set_caption('Tetris')
+pygame.display.set_caption('Tetris')
 
 current_piece = Piece()
 
@@ -42,3 +43,16 @@ def side_panel():
     screen.blit(title_text, (GRID_WIDTH + 20, 20))
     score_text = font.render(f'Score: {score}', False, BLACK)
     screen.blit(score_text, (GRID_WIDTH + 20, 100))
+
+def draw_ghost_piece(): 
+    ghost_piece = copy.deepcopy(current_piece)
+    while not ghost_piece.is_valid(0, 1):
+        ghost_piece.y += 1
+    ghost_color = (60, 240, 0) # Ghost color - Green
+    for i, row in enumerate(ghost_piece.shape):
+        for j, cell in enumerate(row):
+            if cell:
+                rect = pygame.Rect((ghost_piece.x + j) * CELL_SIZE,
+                                   (ghost_piece.y + i) * CELL_SIZE,
+                                   CELL_SIZE, CELL_SIZE)
+                pygame.draw.rect(screen, ghost_color, rect, 1)

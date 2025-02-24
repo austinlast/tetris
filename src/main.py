@@ -9,12 +9,14 @@ def main():
     clock = pygame.time.Clock()
     drop_speed = 1000  # milliseconds
 
+    # timer for slow and fast drop
     pygame.time.set_timer(FALL_EVENT, drop_speed)
     pygame.key.set_repeat(200, 50)
 
     while running:
         game.screen.fill(BLACK)
         game.draw_grid()
+        game.draw_ghost_piece()
         game.draw_piece()
         game.side_panel()
 

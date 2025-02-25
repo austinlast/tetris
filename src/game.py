@@ -16,6 +16,92 @@ class Game:
         self.game_over = False 
         self.lines_cleared = 0 
         self.paused = False
+        self.high_scores = []
+        self.new_high = False
+        self.high_scores_updated = False
+
+    def load_high_scores(self):
+        try:
+            with open("highscores.txt", "r") as f:
+                lines = f.read().strip().splitlines()
+                scores = []
+                for line in lines:
+                    parts = line.rsplit(" ", 1) 
+                    if len(parts) == 2 and parts[1].isdigit():
+                        scores.append((parts[0], int(parts[1]))) 
+                return scores
+        except:
+            return []
+        
+    def save_high_scores(self, scores):
+        with open("highscores.txt", "w") as f:
+            for initials, score in scores:
+                f.write(f"{initials} {score}\n")
+
+    def update_high_scores(self, current_score):
+        old_scores = self.load_high_scores()
+        is_new_high = False
+        new_initials = None
+
+        if len(old_scores) < 3 or current_score > min(score for _, score in old_scores):
+            is_new_high = True
+            new_initials = self.get_initials_input(current_score)  
+
+        if is_new_high:
+            scores = old_scores + [(new_initials, current_score)]
+            scores = sorted(scores, key=lambda x: x[1], reverse=True)[:3]  # Keep top 3
+            self.save_high_scores(scores)
+            return scores, is_new_high
+        else:
+            return old_scores, is_new_high
+    
+    def get_initials_input(self, new_score):
+        initials = ""  
+        font = pygame.font.SysFont("Times New Roman", 24, bold=True)
+        input_active = True
+
+        formatted_score = f"{new_score:06d}"
+
+        while input_active:
+            self.screen.fill(BLACK)
+            
+            box_width, box_height = 300, 200  
+            box_x = (WINDOW_WIDTH - box_width) // 2  
+            box_y = (WINDOW_HEIGHT - box_height) // 2  
+            pygame.draw.rect(self.screen, "black", (box_x, box_y, box_width, box_height))
+            pygame.draw.rect(self.screen, "white", (box_x, box_y, box_width, box_height), 2)
+
+            new_high_text = font.render("NEW HIGH SCORE!", True, "red")
+            score_text = font.render(formatted_score, True, "#00bfff")  # Cyan for formatted score
+            prompt_text = font.render("Enter Your Initials", True, "white")
+            initials_display = initials if initials else "_ _ _"  
+            initials_text = font.render(initials_display, True, "#ffd700")  # Gold for initials
+            confirm_text = font.render("Press Enter to Confirm", True, "gray")
+
+            self.screen.blit(new_high_text, (box_x + (box_width - new_high_text.get_width()) // 2, box_y + 20))
+            self.screen.blit(score_text, (box_x + (box_width - score_text.get_width()) // 2, box_y + 60))
+            self.screen.blit(prompt_text, (box_x + (box_width - prompt_text.get_width()) // 2, box_y + 100))
+            self.screen.blit(initials_text, (box_x + (box_width - initials_text.get_width()) // 2, box_y + 140))
+            self.screen.blit(confirm_text, (box_x + (box_width - confirm_text.get_width()) // 2, box_y + 170))
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN and len(initials) > 0:
+                        input_active = False  
+                    elif event.key == pygame.K_BACKSPACE and len(initials) > 0:
+                        initials = initials[:-1]  
+                    elif len(initials) < 3 and event.unicode.isalpha():
+                        initials += event.unicode.upper()  
+
+        return initials 
+    
+    def format_score(score):
+        return f"{score:06d}"
 
     def new_piece(self):
         self.current_piece = self.next_pieces.pop(0)
@@ -101,12 +187,12 @@ class Game:
                         pygame.draw.rect(self.screen, ghost_color, (x_pos, y_pos, CELL_SIZE, CELL_SIZE), 1)
                         
     def side_panel(self):
-        pygame.draw.rect(self.screen, BLUE, (GRID_WIDTH, 0, SIDE_WIDTH, WINDOW_HEIGHT))
+        pygame.draw.rect(self.screen, BLUE, (GRID_WIDTH, 0, SIDE_WIDTH, WINDOW_HEIGHT))  
         font = pygame.font.SysFont('Times New Roman', 30)
         title_text = font.render('Tetris', False, BLACK)
         self.screen.blit(title_text, (GRID_WIDTH + 20, 20))
         # Render score, level, and lines text
-        score_str = f"Score: {self.score}"
+        score_str = f"Score: {self.score:06d}"
         level_str = f"Level: {self.level}"
         lines_str = f"Lines: {self.lines_cleared}"
         score_text = font.render(score_str, False, BLACK)
@@ -156,22 +242,46 @@ class Game:
                               text_rect.top - padding,
                               text_rect.width + 2 * padding,
                               text_rect.height + 2 * padding)
-        pygame.draw.rect(self.screen, (200, 200, 200), bg_rect)  
-        pygame.draw.rect(self.screen, BLACK, bg_rect, 2) 
-        self.screen.blit(text, text_rect)
-
-    def display_game_over(self):
-        font = pygame.font.SysFont('Times New Roman', 30)
-        text = font.render("Game Over - Press R to restart", True, BLACK)
-        text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
-        padding = 10
-        bg_rect = pygame.Rect(text_rect.left - padding,
-                              text_rect.top - padding,
-                              text_rect.width + 2 * padding,
-                              text_rect.height + 2 * padding)
         pygame.draw.rect(self.screen, (200, 200, 200), bg_rect)
         pygame.draw.rect(self.screen, BLACK, bg_rect, 2)
         self.screen.blit(text, text_rect)
+
+    def display_game_over(self):
+        font = pygame.font.SysFont("Times New Roman", 30, bold=True)
+        # Specify each line along with its color
+        lines = []
+        lines.append(("Game Over", "red"))
+        if self.new_high:
+            lines.append(("Congrats, New High Score!", "#ffd700"))  # Gold
+        lines.append(("High Scores:", "white"))
+        for initials, score in self.high_scores:
+            # Ensure score is formatted as six digits
+            lines.append((f"{initials} {score:06d}", "#00bfff"))  # Cyan
+        lines.append(("Press R to restart", "white"))
+        
+        # Render each line with its corresponding color
+        rendered_lines = [ (font.render(text, True, color), color) for text, color in lines ]
+        
+        spacing = 10
+        total_height = sum(surf.get_height() for surf, _ in rendered_lines) + spacing * (len(rendered_lines) - 1)
+        padding = 15
+        max_width = max(surf.get_width() for surf, _ in rendered_lines)
+        container_width = max_width + 2 * padding
+        container_height = total_height + 2 * padding
+        container_x = (WINDOW_WIDTH - container_width) // 2
+        container_y = (WINDOW_HEIGHT - container_height) // 2
+        container_rect = pygame.Rect(container_x, container_y, container_width, container_height)
+        
+        # Draw the container box with dark gray background and white border
+        pygame.draw.rect(self.screen, "#1a1a1a", container_rect)
+        pygame.draw.rect(self.screen, "white", container_rect, 2)
+        
+        current_y = container_y + padding
+        for surf, _ in rendered_lines:
+            x = container_x + (container_width - surf.get_width()) // 2
+            self.screen.blit(surf, (x, current_y))
+            current_y += surf.get_height() + spacing
+
 
     def update(self):
         self.screen.fill(BLACK)
@@ -179,10 +289,12 @@ class Game:
         self.draw_ghost_piece()
         self.draw_piece()
         self.side_panel()
-
         if self.paused:
             self.display_pause()
         elif self.game_over:
+            if not self.high_scores_updated:
+                self.high_scores, self.new_high = self.update_high_scores(self.score)
+                self.high_scores_updated = True
             self.display_game_over()
         elif self.current_piece.locked:
             self.clear_lines()

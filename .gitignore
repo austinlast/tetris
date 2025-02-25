@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 *.pyo
 *$py.class
+*.txt # Ignore local text files

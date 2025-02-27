@@ -1,11 +1,5 @@
 import pygame
 import copy
-from settings import (WIDTH, HEIGHT, CELL_SIZE, GRID_WIDTH, GRID_HEIGHT, 
-                      SIDE_WIDTH, WINDOW_WIDTH, WINDOW_HEIGHT, BLACK, GRAY, BLUE, grid, COLORS)
-from piece import Piece
-
-import pygame
-import copy
 from settings import (WIDTH, HEIGHT, CELL_SIZE, GRID_WIDTH, GRID_HEIGHT,
                       SIDE_WIDTH, WINDOW_WIDTH, WINDOW_HEIGHT, BLACK, GRAY, BLUE, grid, COLORS)
 from piece import Piece
@@ -13,6 +7,15 @@ from piece import Piece
 
 class Game:
     def __init__(self):
+        """
+        Initializes the game.
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.current_piece = Piece()
         self.hold_piece = None
@@ -23,6 +26,15 @@ class Game:
         self.lines_cleared = 0
 
     def new_piece(self):
+        """
+        Creates a new piece and checks for game over condition.
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         self.current_piece = Piece()
         self.hold_used = False
         for i, row in enumerate(self.current_piece.shape):
@@ -35,6 +47,15 @@ class Game:
                 break
 
     def hold_current_piece(self):
+        """
+        This Function holds the current piece then it swaps it with the held piece.
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         if self.hold_used:
             return
         if self.hold_piece is None:
@@ -47,6 +68,15 @@ class Game:
         self.hold_used = True
 
     def clear_lines(self):
+        """
+        This function erases completed lines so the game can continue
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         lines_cleared_now = 0
         new_grid = []
         for row in grid:
@@ -64,6 +94,15 @@ class Game:
             self.lines_cleared += lines_cleared_now
 
     def draw_grid(self):
+        """
+        This function draws the game grid onto the screen
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         for y in range(HEIGHT):
             for x in range(WIDTH):
                 pygame.draw.rect(self.screen, COLORS[grid[y][x]],
@@ -72,6 +111,15 @@ class Game:
                                  (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE), 1)
 
     def draw_piece(self):
+        """
+        Draws the current piece on the screen.
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         for i, row in enumerate(self.current_piece.shape):
             for j, cell in enumerate(row):
                 if cell:
@@ -85,6 +133,15 @@ class Game:
                                       CELL_SIZE, CELL_SIZE), 1)
 
     def draw_ghost_piece(self):
+        """
+        This function draws the ghost piece onto the bottom of the screen. 
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         ghost_piece = copy.deepcopy(self.current_piece)
         while not ghost_piece.is_valid(0, 1):
             ghost_piece.y += 1
@@ -108,6 +165,15 @@ class Game:
                                          (x_pos, y_pos, CELL_SIZE, CELL_SIZE), 1)
 
     def side_panel(self):
+        """
+        This function draws the side panel which shows the score and level.
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         pygame.draw.rect(self.screen, BLUE, (GRID_WIDTH, 0, SIDE_WIDTH, WINDOW_HEIGHT))
         font = pygame.font.SysFont('Times New Roman', 30)
         title_text = font.render('Tetris', False, BLACK)
@@ -121,6 +187,15 @@ class Game:
         self.screen.blit(level_text, (GRID_WIDTH + 20, 100))
 
     def display_game_over(self):
+        """
+        This function displays the game over screen with instructions to restart (press R).
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         font = pygame.font.SysFont("Times New Roman", 30, bold=True)
         lines = [("Game Over", "red")]
         lines.append(("Press R to restart", "white"))
@@ -147,6 +222,15 @@ class Game:
             current_y += surf.get_height() + spacing
 
     def update(self):
+        """
+        This function is called to update the display.
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         self.screen.fill(BLACK)
         self.draw_grid()
         self.draw_ghost_piece()

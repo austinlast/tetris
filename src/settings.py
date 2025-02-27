@@ -1,8 +1,10 @@
 import pygame
 
+# Sets up pygame
 pygame.init()
 pygame.font.init()
 
+# All global variables that we will use
 WIDTH = 10
 HEIGHT = 20
 CELL_SIZE = 30
@@ -18,6 +20,7 @@ BLACK = (0, 0, 0)
 GRAY = (100, 100, 100)
 BLUE = (173, 216, 230)
 
+# Sets the grid up 
 grid = [[0 for _ in range(WIDTH)] for _ in range(HEIGHT)]
 
 # Tetrimino shapes
@@ -31,6 +34,7 @@ SHAPES = [
     ("L", [[0, 0, 7], [7, 7, 7]])
 ]
 
+# sets colors for the pieces
 COLORS = [
     (0, 0, 0),
     (0, 255, 255),

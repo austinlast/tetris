@@ -5,6 +5,7 @@ from settings import BLACK, grid, WIDTH, HEIGHT
 FALL_EVENT = pygame.USEREVENT + 1
 
 def main():
+    #Initializes variables
     running = True
     clock = pygame.time.Clock()
     drop_speed = 1000
@@ -14,8 +15,11 @@ def main():
 
     game_instance = Game()
 
+    # Starts gameplay loop
     while running:
         game_instance.update()
+
+        #Handles all events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -42,9 +46,11 @@ def main():
                     elif event.key == pygame.K_c:
                         game_instance.hold_current_piece()
 
+        # Updates the display after iteration
         pygame.display.flip()
         clock.tick(60)
 
+    #Ends the game
     pygame.quit()
 
 if __name__ == '__main__':

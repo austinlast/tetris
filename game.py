@@ -10,32 +10,166 @@ from piece import Piece
 class Game:
     def __init__(self):
         """
-        Initializes the game.
+            Initializes the game.
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        self.current_piece = Piece()
+        self.current_piece = Piece()  
         self.hold_piece = None
         self.hold_used = False
         self.score = 0
         self.level = 1
         self.game_over = False
         self.lines_cleared = 0
+        self.high_scores = []
+        self.new_high = False
+        self.high_scores_updated = False
+
+    def load_high_scores(self):
+        """
+            Loads high scores from a text file and returns them as a list of (name, score) tuples.
+
+            Parameters:
+                None
+
+            Returns:
+                list: list of tuples containing player names and their corresponding scores.
+                    Returns an empty list if the file cannot be read or is improperly formatted.
+        """
+        try:
+            with open("highscores.txt", "r") as f:
+                lines = f.read().strip().splitlines()
+                scores = []
+                for line in lines:
+                    parts = line.rsplit(" ", 1) 
+                    if len(parts) == 2 and parts[1].isdigit():
+                        scores.append((parts[0], int(parts[1]))) 
+                return scores
+        except:
+            return []
+        
+    def save_high_scores(self, scores):
+        """
+            Saves the given list of high scores to a text file.
+
+            Parameters:
+                scores (list): A list of tuples containing player initials and their scores.
+
+            Returns:
+            None
+        """
+        with open("highscores.txt", "w") as f:
+            for initials, score in scores:
+                f.write(f"{initials} {score}\n")
+
+    def update_high_scores(self, current_score):
+        """
+            Updates the high score list if the current score qualifies as a new high score.
+
+            Parameters:
+                current_score (int): The score achieved in the current game session.
+
+            Returns:
+            tuple:
+                - list: Updated list of top high scores (max 3 entries).
+                - bool: Indicates whether the current score was a new high score.
+        """
+        old_scores = self.load_high_scores()
+        is_new_high = False
+        new_initials = None
+
+        if len(old_scores) < 3 or current_score > min(score for _, score in old_scores):
+            is_new_high = True
+            new_initials = self.get_initials_input(current_score)  
+
+        if is_new_high:
+            scores = old_scores + [(new_initials, current_score)]
+            scores = sorted(scores, key=lambda x: x[1], reverse=True)[:3]  # Keep top 3
+            self.save_high_scores(scores)
+            return scores, is_new_high
+        else:
+            return old_scores, is_new_high
+        
+    def get_initials_input(self, new_score):
+        """
+            Displays a prompt for the player to enter their initials after achieving a high score.
+
+            Parameters:
+                new_score (int): The new high score to display during the input prompt.
+
+            Returns:
+                str: A string of up to 3 uppercase letters entered by the player.
+        """
+        initials = ""  
+        font = pygame.font.SysFont("Times New Roman", 24, bold=True)
+        input_active = True
+
+        formatted_score = f"{new_score:06d}"
+
+        while input_active:
+            self.screen.fill(BLACK)
+            
+            box_width, box_height = 300, 200  
+            box_x = (WINDOW_WIDTH - box_width) // 2  
+            box_y = (WINDOW_HEIGHT - box_height) // 2  
+            pygame.draw.rect(self.screen, "black", (box_x, box_y, box_width, box_height))
+            pygame.draw.rect(self.screen, "white", (box_x, box_y, box_width, box_height), 2)
+
+            new_high_text = font.render("NEW HIGH SCORE!", True, "red")
+            score_text = font.render(formatted_score, True, "#00bfff")  # Cyan for formatted score
+            prompt_text = font.render("Enter Your Initials", True, "white")
+            initials_display = initials if initials else "_ _ _"  
+            initials_text = font.render(initials_display, True, "#ffd700")  # Gold for initials
+            confirm_text = font.render("Press Enter to Confirm", True, "gray")
+
+            self.screen.blit(new_high_text, (box_x + (box_width - new_high_text.get_width()) // 2, box_y + 20))
+            self.screen.blit(score_text, (box_x + (box_width - score_text.get_width()) // 2, box_y + 60))
+            self.screen.blit(prompt_text, (box_x + (box_width - prompt_text.get_width()) // 2, box_y + 100))
+            self.screen.blit(initials_text, (box_x + (box_width - initials_text.get_width()) // 2, box_y + 140))
+            self.screen.blit(confirm_text, (box_x + (box_width - confirm_text.get_width()) // 2, box_y + 170))
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN and len(initials) > 0:
+                        input_active = False  
+                    elif event.key == pygame.K_BACKSPACE and len(initials) > 0:
+                        initials = initials[:-1]  
+                    elif len(initials) < 3 and event.unicode.isalpha():
+                        initials += event.unicode.upper()  
+
+        return initials 
+    
+    def format_score(score):
+        """
+            Formats a numerical score as a six-digit string, padding with leading zeros if necessary.
+
+            Parameters:
+                score (int): The score to format.
+
+            Returns:
+                str: The formatted score as a six-digit string.
+        """
+        return f"{score:06d}"
 
     def new_piece(self):
         """
-        Creates a new piece and checks for game over condition.
+            Creates a new piece and checks for game over condition.
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         self.current_piece = Piece()
         self.hold_used = False
@@ -50,13 +184,13 @@ class Game:
 
     def hold_current_piece(self):
         """
-        This Function holds the current piece then it swaps it with the held piece.
+            This Function holds the current piece then it swaps it with the held piece.
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         if self.hold_used:
             return
@@ -71,13 +205,13 @@ class Game:
 
     def clear_lines(self):
         """
-        This function erases completed lines so the game can continue
+            This function erases completed lines so the game can continue
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         lines_cleared_now = 0
         new_grid = []
@@ -97,13 +231,13 @@ class Game:
 
     def draw_grid(self):
         """
-        This function draws the game grid onto the screen
+            This function draws the game grid onto the screen
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         for y in range(HEIGHT):
             for x in range(WIDTH):
@@ -126,13 +260,13 @@ class Game:
 
     def draw_piece(self):
         """
-        Draws the current piece on the screen.
+            Draws the current piece on the screen.
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         for i, row in enumerate(self.current_piece.shape):
             for j, cell in enumerate(row):
@@ -150,13 +284,13 @@ class Game:
 
     def draw_ghost_piece(self):
         """
-        This function draws the ghost piece onto the bottom of the screen. 
+            This function draws the ghost piece onto the bottom of the screen. 
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         ghost_piece = copy.deepcopy(self.current_piece)
         while not ghost_piece.is_valid(0, 1):
@@ -183,13 +317,13 @@ class Game:
 
     def side_panel(self):
         """
-        This function draws the side panel which shows the score and level.
+            This function draws the side panel which shows the score and level.
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         pygame.draw.rect(self.screen, BLUE, (GRID_WIDTH, 0, SIDE_WIDTH, WINDOW_HEIGHT))
         font = pygame.font.SysFont('Times New Roman', 30)
@@ -198,23 +332,32 @@ class Game:
         # Render score and level text
         score_str = f"Score: {self.score:06d}"
         level_str = f"Level: {self.level}"
+        # lines_str = f"Lines: {self.lines_cleared}"
         score_text = font.render(score_str, False, BLACK)
         level_text = font.render(level_str, False, BLACK)
+        # lines_text = font.render(lines_str, False, BLACK)
         self.screen.blit(score_text, (GRID_WIDTH + 20, 60))
         self.screen.blit(level_text, (GRID_WIDTH + 20, 100))
+        # self.screen.blit(lines_text, (GRID_WIDTH + 20, 140))
 
     def display_game_over(self):
         """
-        This function displays the game over screen with instructions to restart (press R).
+            This function displays the game over screen with instructions to restart (press R).
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         font = pygame.font.SysFont("Times New Roman", 30, bold=True)
         lines = [("Game Over", "red")]
+        if self.new_high:
+            lines.append(("Congrats, New High Score!", "#ffd700"))  # Gold
+        lines.append(("High Scores:", "white"))
+        for initials, score in self.high_scores:
+            # Ensure score is formatted as six digits
+            lines.append((f"{initials} {score:06d}", "#00bfff"))  # Cyan
         lines.append(("Press R to restart", "white"))
 
         rendered_lines = [(font.render(text, True, color), color) for text, color in lines]
@@ -240,13 +383,13 @@ class Game:
 
     def update(self):
         """
-        This function is called to update the display.
+            This function is called to update the display.
 
-        Parameters:
-        None
+            Parameters:
+                None
 
-        Returns:
-        None
+            Returns:
+                None
         """
         self.screen.fill(BLACK)
         self.draw_grid()
@@ -254,6 +397,9 @@ class Game:
         self.draw_piece()
         self.side_panel()
         if self.game_over:
+            if not self.high_scores_updated:
+                self.high_scores, self.new_high = self.update_high_scores(self.score)
+                self.high_scores_updated = True
             self.display_game_over()
         elif self.current_piece.locked:
             self.clear_lines()

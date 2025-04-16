@@ -15,12 +15,12 @@ class Piece:
             This function Is what helps move the pieces side to side (x to y).
 
             Parameters:
-            dir_x (int): The x movement
-            dir_y (int): The y movement
+                dir_x (int): The x movement
+                dir_y (int): The y movement
 
             Returns:
-            None
-            """
+                None
+        """
         if not self.is_valid(dir_x, dir_y):
             self.x += dir_x
             self.y += dir_y
@@ -29,14 +29,14 @@ class Piece:
 
     def stop(self):
         """
-                    This function will lock the piece in place if it is unable to move further.
+            This function will lock the piece in place if it is unable to move further.
 
-                    Parameters:
-                    None
+            Parameters:
+                None
 
-                    Returns:
-                    None
-                    """
+            Returns:
+                None
+        """
         for i, row in enumerate(self.shape):
             for j, cell in enumerate(row):
                 if cell:
@@ -45,15 +45,15 @@ class Piece:
 
     def is_valid(self, dir_x, dir_y):
         """
-                    This function Helps determine if the move your making is valid.
+            This function Helps determine if the move your making is valid.
 
-                    Parameters:
-                    dir_x (int): The x movement
-                    dir_y (int): The y movement
+            Parameters:
+                dir_x (int): The x movement
+                dir_y (int): The y movement
 
-                    Returns:
-                    Boolean: True if the move is valid, False if not
-                    """
+            Returns:
+                Boolean: True if the move is valid, False if not
+        """
         for i, row in enumerate(self.shape):
             for j, cell in enumerate(row):
                 if cell:
@@ -67,13 +67,13 @@ class Piece:
 
     def rotate(self):
         """
-                    This function allows the pieces to be rotated by hitting the up arrow.
+            This function allows the pieces to be rotated by hitting the up arrow.
 
-                    Parameters:
-                        None
+            Parameters:
+                None
 
-                    Returns:
-                        None
+            Returns:
+                None
         """
         prev_shape = self.shape
         self.shape = [list(row) for row in zip(*self.shape[::-1])]
@@ -92,13 +92,13 @@ class Piece:
 
     def rotate_ccw(self):
         """
-                    This function allows the pieces to be rotated counter clockwise.
+            This function allows the pieces to be rotated counter clockwise.
 
-                    Parameters:
-                        None
+            Parameters:
+                None
 
-                    Returns:
-                        None
+            Returns:
+                None
         """
         old_shape = self.shape
         self.shape = [list(row) for row in zip(*self.shape)][::-1]
@@ -114,3 +114,17 @@ class Piece:
                     if new_y >= 0 and grid[new_y][new_x] != 0:
                         self.shape = old_shape
                         return
+
+    def instant_drop(self):
+        """
+            Instantly moves the current piece to the lowest valid position on the board.
+
+            Parameters:
+                None
+
+            Returns:
+                None
+        """ 
+        while not self.is_valid(0, 1):
+            self.y += 1
+        self.stop()     

@@ -30,14 +30,16 @@ def main():
                     for i in range(HEIGHT):
                         grid[i] = [0] * WIDTH
                     game_instance = Game()
-                elif not game_instance.game_over:
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                elif event.key == pygame.K_p:
+                    game_instance.paused = not game_instance.paused  
+                elif not game_instance.game_over and not game_instance.paused:
+                    if event.key == pygame.K_LEFT:
                         game_instance.current_piece.move(-1, 0)
-                    elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    elif event.key == pygame.K_RIGHT:
                         game_instance.current_piece.move(1, 0)
-                    elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    elif event.key == pygame.K_DOWN:
                         game_instance.current_piece.move(0, 1)
-                    elif event.key == pygame.K_UP or event.key == pygame.K_z or event.key == pygame.K_w:
+                    elif event.key == pygame.K_UP or event.key == pygame.K_z:
                         game_instance.current_piece.rotate()
                     elif event.key == pygame.K_x:
                         game_instance.current_piece.rotate_ccw()

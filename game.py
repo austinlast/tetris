@@ -20,6 +20,7 @@ class Game:
         """
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.current_piece = Piece()  
+        self.next_pieces = [Piece(), Piece(), Piece()]  
         self.hold_piece = None
         self.hold_used = False
         self.score = 0
@@ -29,6 +30,7 @@ class Game:
         self.high_scores = []
         self.new_high = False
         self.high_scores_updated = False
+        self.paused = False
 
     def load_high_scores(self):
         """
@@ -332,14 +334,67 @@ class Game:
         # Render score and level text
         score_str = f"Score: {self.score:06d}"
         level_str = f"Level: {self.level}"
-        # lines_str = f"Lines: {self.lines_cleared}"
+        lines_str = f"Lines: {self.lines_cleared}"
         score_text = font.render(score_str, False, BLACK)
         level_text = font.render(level_str, False, BLACK)
-        # lines_text = font.render(lines_str, False, BLACK)
+        lines_text = font.render(lines_str, False, BLACK)
         self.screen.blit(score_text, (GRID_WIDTH + 20, 60))
         self.screen.blit(level_text, (GRID_WIDTH + 20, 100))
-        # self.screen.blit(lines_text, (GRID_WIDTH + 20, 140))
+        self.screen.blit(lines_text, (GRID_WIDTH + 20, 140))
+        margin = 5  
+        max_width = max(font.size(score_str)[0], font.size(level_str)[0], font.size(lines_str)[0])
+        text_height = font.get_height()
+        border_x = GRID_WIDTH + 20 - margin
+        border_y = 60 - margin
+        border_width = max_width + 2 * margin
+        border_height = (140 + text_height - 60) + 2 * margin
+        pygame.draw.rect(self.screen, BLACK, (border_x, border_y, border_width, border_height), 2)
+        preview_font = pygame.font.SysFont('Times New Roman', 20)
+        hold_text = preview_font.render('Hold:', False, BLACK)
+        self.screen.blit(hold_text, (GRID_WIDTH + 20, 180))
+        if self.hold_piece is not None:
+            for i, row in enumerate(self.hold_piece.shape):
+                for j, cell in enumerate(row):
+                    if cell:
+                        rect = pygame.Rect(GRID_WIDTH + 20 + j * (CELL_SIZE // 2),
+                                           210 + i * (CELL_SIZE // 2),
+                                           CELL_SIZE // 2, CELL_SIZE // 2)
+                        pygame.draw.rect(self.screen, COLORS[self.hold_piece.color], rect)
+                        pygame.draw.rect(self.screen, GRAY, rect, 1)
+        next_text = preview_font.render('Next:', False, BLACK)
+        self.screen.blit(next_text, (GRID_WIDTH + 20, 280))
+        for index, piece in enumerate(self.next_pieces):
+            for i, row in enumerate(piece.shape):
+                for j, cell in enumerate(row):
+                    if cell:
+                        rect = pygame.Rect(GRID_WIDTH + 20 + j * (CELL_SIZE // 2),
+                                           320 + index * 80 + i * (CELL_SIZE // 2),
+                                           CELL_SIZE // 2, CELL_SIZE // 2)
+                        pygame.draw.rect(self.screen, COLORS[piece.color], rect)
+                        pygame.draw.rect(self.screen, GRAY, rect, 1)
 
+    def display_pause(self):
+        """
+            Displays a pause message in the center of the screen with a background and border.
+
+            Parameters:
+                None
+
+            Returns:
+                None
+        """
+        font = pygame.font.SysFont('Times New Roman', 30)
+        text = font.render("Paused - Press P to resume", True, BLACK)
+        text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+        padding = 10
+        bg_rect = pygame.Rect(text_rect.left - padding,
+                              text_rect.top - padding,
+                              text_rect.width + 2 * padding,
+                              text_rect.height + 2 * padding)
+        pygame.draw.rect(self.screen, (200, 200, 200), bg_rect)
+        pygame.draw.rect(self.screen, BLACK, bg_rect, 2)
+        self.screen.blit(text, text_rect)
+    
     def display_game_over(self):
         """
             This function displays the game over screen with instructions to restart (press R).
@@ -396,7 +451,9 @@ class Game:
         self.draw_ghost_piece()
         self.draw_piece()
         self.side_panel()
-        if self.game_over:
+        if self.paused:
+            self.display_pause()
+        elif self.game_over:
             if not self.high_scores_updated:
                 self.high_scores, self.new_high = self.update_high_scores(self.score)
                 self.high_scores_updated = True
